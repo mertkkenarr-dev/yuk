@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import type { AppState } from "../types";
-import { exportStateAsJSON, parseImportedState } from "../lib/storage";
+import { parseImportedState, triggerBackupDownload } from "../lib/storage";
+import { markBackedUp } from "../lib/persistence";
 
 interface Props {
   state: AppState;
@@ -12,13 +13,8 @@ export function BackupBar({ state, onImport }: Props) {
   const [error, setError] = useState<string | null>(null);
 
   function handleExport() {
-    const blob = new Blob([exportStateAsJSON(state)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `yuk-yedek-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
+    triggerBackupDownload(state);
+    markBackedUp();
   }
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {

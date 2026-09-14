@@ -46,6 +46,16 @@ export function exportStateAsJSON(state: AppState): string {
   return JSON.stringify(state, null, 2);
 }
 
+export function triggerBackupDownload(state: AppState): void {
+  const blob = new Blob([exportStateAsJSON(state)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `yuk-yedek-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function parseImportedState(raw: string): AppState {
   const parsed = JSON.parse(raw);
   if (!Array.isArray(parsed?.exercises) || !Array.isArray(parsed?.sessions)) {

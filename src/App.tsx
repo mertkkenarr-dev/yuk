@@ -3,6 +3,7 @@ import { BackupBar } from "./components/BackupBar";
 import { BodyWeightTracker } from "./components/BodyWeightTracker";
 import { ExerciseManager } from "./components/ExerciseManager";
 import { ExerciseProgressChart } from "./components/ExerciseProgressChart";
+import { PersistenceBanner } from "./components/PersistenceBanner";
 import { PRBanner } from "./components/PRBanner";
 import { RoutineManager } from "./components/RoutineManager";
 import { SessionForm } from "./components/SessionForm";
@@ -18,6 +19,7 @@ import {
   weeklyVolumeByMuscleGroup,
 } from "./lib/calc";
 import type { PRHit } from "./lib/calc";
+import { requestPersistentStorage } from "./lib/persistence";
 import { loadState, saveState } from "./lib/storage";
 import type { AppState, BodyWeightEntry, Exercise, MuscleGroup, Routine, WorkoutSession } from "./types";
 
@@ -29,6 +31,10 @@ export default function App() {
   useEffect(() => {
     saveState(state);
   }, [state]);
+
+  useEffect(() => {
+    requestPersistentStorage();
+  }, []);
 
   const exerciseMap = Object.fromEntries(state.exercises.map((e) => [e.id, e]));
   const muscleGroups = Array.from(new Set(state.exercises.map((e) => e.muscleGroup))) as MuscleGroup[];
@@ -102,6 +108,8 @@ export default function App() {
             <p className="text-sm text-ink-soft -mt-0.5">Antrenman günlüğün</p>
           </div>
         </header>
+
+        <PersistenceBanner state={state} hasData={state.sessions.length > 0 || state.bodyWeights.length > 0} />
 
         <StatsHeader
           totalSessions={state.sessions.length}
