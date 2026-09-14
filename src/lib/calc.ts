@@ -235,6 +235,57 @@ export function currentWeekStreak(sessions: WorkoutSession[]): number {
   return streak;
 }
 
+export interface CalendarDay {
+  date: string;
+  inMonth: boolean;
+  muscleGroups: MuscleGroup[];
+  routineDayName?: string;
+}
+
+/** Full calendar grid (Monday-first, padded to whole weeks) for the given 1-indexed month. */
+export function monthCalendar(sessions: WorkoutSession[], exercises: Exercise[], year: number, month: number): CalendarDay[] {
+  const exerciseMap = Object.fromEntries(exercises.map((e) => [e.id, e]));
+  const first = new Date(year, month - 1, 1);
+  const startWeekday = (first.getDay() + 6) % 7; // Monday = 0
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const gridStart = new Date(first);
+  gridStart.setDate(gridStart.getDate() - startWeekday);
+
+  const byDate = new Map<string, WorkoutSession[]>();
+  for (const s of sessions) {
+    const arr = byDate.get(s.date) ?? [];
+    arr.push(s);
+    byDate.set(s.date, arr);
+  }
+
+  const totalCells = Math.ceil((startWeekday + daysInMonth) / 7) * 7;
+  const result: CalendarDay[] = [];
+  for (let i = 0; i < totalCells; i++) {
+    const d = new Date(gridStart);
+    d.setDate(d.getDate() + i);
+    const key = dateToISO(d);
+    const daySessions = byDate.get(key) ?? [];
+    const groups = new Set<MuscleGroup>();
+    for (const s of daySessions) {
+      for (const se of s.exercises) {
+        const ex = exerciseMap[se.exerciseId];
+        if (ex) groups.add(ex.muscleGroup);
+      }
+    }
+    result.push({
+      date: key,
+      inMonth: d.getMonth() === month - 1,
+      muscleGroups: Array.from(groups),
+      routineDayName: daySessions[0]?.routineDayName,
+    });
+  }
+  return result;
+}
+
+export function monthLabel(year: number, month: number): string {
+  return new Date(year, month - 1, 1).toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
+}
+
 export function totalVolume(session: WorkoutSession): number {
   return session.exercises.reduce((sum, se) => sum + se.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0);
 }

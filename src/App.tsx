@@ -9,6 +9,7 @@ import { SessionList } from "./components/SessionList";
 import { StatsHeader } from "./components/StatsHeader";
 import { StreakHeatmap } from "./components/StreakHeatmap";
 import { VolumeChart } from "./components/VolumeChart";
+import { WorkoutCalendar } from "./components/WorkoutCalendar";
 import {
   currentWeekStreak,
   detectPRs,
@@ -106,6 +107,7 @@ export default function App() {
 
         <ExerciseProgressChart exercises={state.exercises} sessions={state.sessions} />
         <VolumeChart data={volumeTrend} muscleGroups={muscleGroups} />
+        <WorkoutCalendar sessions={state.sessions} exercises={state.exercises} />
         <StreakHeatmap days={heatmap} />
 
         <p className="text-xs uppercase tracking-wide text-ink-soft mb-3">Antrenmanlar</p>
