@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { BackupBar } from "./components/BackupBar";
+import { BodyWeightTracker } from "./components/BodyWeightTracker";
 import { ExerciseManager } from "./components/ExerciseManager";
 import { ExerciseProgressChart } from "./components/ExerciseProgressChart";
 import { PRBanner } from "./components/PRBanner";
@@ -18,7 +19,7 @@ import {
 } from "./lib/calc";
 import type { PRHit } from "./lib/calc";
 import { loadState, saveState } from "./lib/storage";
-import type { AppState, Exercise, MuscleGroup, Routine, WorkoutSession } from "./types";
+import type { AppState, BodyWeightEntry, Exercise, MuscleGroup, Routine, WorkoutSession } from "./types";
 
 export default function App() {
   const [state, setState] = useState<AppState>(loadState);
@@ -69,6 +70,11 @@ export default function App() {
     setState((s) => ({ ...s, routines: s.routines.filter((r) => r.id !== id) }));
   }
 
+  function addBodyWeight(entry: Omit<BodyWeightEntry, "id">) {
+    const withId: BodyWeightEntry = { ...entry, id: crypto.randomUUID() };
+    setState((s) => ({ ...s, bodyWeights: [...s.bodyWeights, withId] }));
+  }
+
   return (
     <div className="relative min-h-screen text-ink overflow-x-hidden">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -106,6 +112,7 @@ export default function App() {
         <SessionForm exercises={state.exercises} routines={state.routines} sessions={state.sessions} onSave={addSession} />
 
         <ExerciseProgressChart exercises={state.exercises} sessions={state.sessions} />
+        <BodyWeightTracker entries={state.bodyWeights} onAdd={addBodyWeight} />
         <VolumeChart data={volumeTrend} muscleGroups={muscleGroups} />
         <WorkoutCalendar sessions={state.sessions} exercises={state.exercises} />
         <StreakHeatmap days={heatmap} />

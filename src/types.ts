@@ -11,6 +11,7 @@ export interface Exercise {
 export interface SetEntry {
   weight: number;
   reps: number;
+  isWarmup?: boolean;
 }
 
 export interface RoutineExercise {
@@ -42,11 +43,19 @@ export interface WorkoutSession {
   id: string;
   date: string; // ISO date (yyyy-mm-dd)
   routineDayName?: string;
+  durationMinutes?: number;
   exercises: SessionExercise[];
+}
+
+export interface BodyWeightEntry {
+  id: string;
+  date: string; // ISO date (yyyy-mm-dd)
+  weight: number;
 }
 
 export interface AppState {
   exercises: Exercise[];
   routines: Routine[];
   sessions: WorkoutSession[];
+  bodyWeights: BodyWeightEntry[];
 }

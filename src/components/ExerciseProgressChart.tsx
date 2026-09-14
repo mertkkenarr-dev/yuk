@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { exerciseProgress, formatWeight } from "../lib/calc";
+import { exerciseProgress, formatWeight, personalBests } from "../lib/calc";
 import type { Exercise, WorkoutSession } from "../types";
 
 interface Props {
@@ -17,6 +17,7 @@ export function ExerciseProgressChart({ exercises, sessions }: Props) {
   const exerciseId = selected && exercisesWithData.some((e) => e.id === selected) ? selected : exercisesWithData[0].id;
   const data = exerciseProgress(sessions, exerciseId);
   const exercise = exercises.find((e) => e.id === exerciseId);
+  const bests = personalBests(sessions, exerciseId);
 
   return (
     <div className="mb-8">
@@ -34,6 +35,22 @@ export function ExerciseProgressChart({ exercises, sessions }: Props) {
           ))}
         </select>
       </div>
+
+      <div className="grid grid-cols-3 gap-2 mb-3">
+        <div className="rounded-lg border border-border bg-surface shadow-sm p-3 text-center">
+          <p className="text-[10px] text-ink-soft mb-0.5">En ağır set</p>
+          <p className="font-display text-lg text-ink">{formatWeight(bests.maxWeight)} kg</p>
+        </div>
+        <div className="rounded-lg border border-border bg-surface shadow-sm p-3 text-center">
+          <p className="text-[10px] text-ink-soft mb-0.5">En çok tekrar</p>
+          <p className="font-display text-lg text-ink">{bests.maxReps}</p>
+        </div>
+        <div className="rounded-lg border border-power/40 bg-power-soft p-3 text-center">
+          <p className="text-[10px] text-power mb-0.5">Tahmini 1RM</p>
+          <p className="font-display text-lg text-power">{formatWeight(Math.round(bests.best1RM))} kg</p>
+        </div>
+      </div>
+
       <div className="h-48 rounded-xl border border-border bg-surface shadow-sm p-3">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={data}>

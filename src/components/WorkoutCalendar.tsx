@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { CalendarDay } from "../lib/calc";
-import { formatWeight, MUSCLE_GROUP_COLORS, MUSCLE_GROUP_LABELS, monthCalendar, monthLabel, totalVolume } from "../lib/calc";
+import { formatDuration, formatWeight, MUSCLE_GROUP_COLORS, MUSCLE_GROUP_LABELS, monthCalendar, monthLabel, totalVolume } from "../lib/calc";
 import type { Exercise, WorkoutSession } from "../types";
 
 interface Props {
@@ -91,7 +91,10 @@ export function WorkoutCalendar({ sessions, exercises }: Props) {
           {selectedSessions.map((s) => (
             <div key={s.id}>
               <div className="flex items-baseline justify-between mb-1.5">
-                <p className="font-medium">{s.routineDayName ?? "Serbest Antrenman"}</p>
+                <p className="font-medium">
+                  {s.routineDayName ?? "Serbest Antrenman"}
+                  {s.durationMinutes && <span className="text-ink-soft font-normal"> · {formatDuration(s.durationMinutes)}</span>}
+                </p>
                 <span className="font-display text-power text-xs">{Math.round(totalVolume(s)).toLocaleString("tr-TR")} kg</span>
               </div>
               <div className="space-y-1">

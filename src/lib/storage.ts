@@ -20,7 +20,7 @@ export const DEFAULT_EXERCISES: Exercise[] = [
 ];
 
 function defaultState(): AppState {
-  return { exercises: DEFAULT_EXERCISES, routines: [], sessions: [] };
+  return { exercises: DEFAULT_EXERCISES, routines: [], sessions: [], bodyWeights: [] };
 }
 
 export function loadState(): AppState {
@@ -31,6 +31,7 @@ export function loadState(): AppState {
     if (!parsed.exercises?.length) parsed.exercises = DEFAULT_EXERCISES;
     if (!parsed.routines) parsed.routines = [];
     if (!parsed.sessions) parsed.sessions = [];
+    if (!parsed.bodyWeights) parsed.bodyWeights = [];
     return parsed;
   } catch {
     return defaultState();
@@ -54,5 +55,6 @@ export function parseImportedState(raw: string): AppState {
     exercises: parsed.exercises,
     routines: Array.isArray(parsed.routines) ? parsed.routines : [],
     sessions: parsed.sessions,
+    bodyWeights: Array.isArray(parsed.bodyWeights) ? parsed.bodyWeights : [],
   };
 }

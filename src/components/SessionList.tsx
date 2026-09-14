@@ -1,4 +1,4 @@
-import { formatWeight, totalVolume } from "../lib/calc";
+import { formatDuration, formatWeight, totalVolume } from "../lib/calc";
 import type { Exercise, WorkoutSession } from "../types";
 
 interface Props {
@@ -30,6 +30,7 @@ export function SessionList({ sessions, exercises, onDelete }: Props) {
               </p>
               <p className="text-xs text-ink-soft">
                 {new Date(s.date).toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" })}
+                {s.durationMinutes ? ` · ${formatDuration(s.durationMinutes)}` : ""}
               </p>
             </div>
             <div className="flex items-center gap-3">
@@ -46,7 +47,9 @@ export function SessionList({ sessions, exercises, onDelete }: Props) {
             {s.exercises.map((se) => (
               <p key={se.exerciseId}>
                 {exerciseMap[se.exerciseId]?.name ?? "—"}:{" "}
-                {se.sets.map((set) => `${formatWeight(set.weight)}×${set.reps}`).join(", ")}
+                {se.sets
+                  .map((set) => `${formatWeight(set.weight)}×${set.reps}${set.isWarmup ? " (ısınma)" : ""}`)
+                  .join(", ")}
               </p>
             ))}
           </div>

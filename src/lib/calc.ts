@@ -49,6 +49,11 @@ function sessionExerciseFor(session: WorkoutSession, exerciseId: string): Sessio
   return session.exercises.find((e) => e.exerciseId === exerciseId);
 }
 
+/** Working sets only — warm-up sets don't count toward PRs, volume, or progress. */
+export function workingSets(sets: SetEntry[]): SetEntry[] {
+  return sets.filter((s) => !s.isWarmup);
+}
+
 export interface PersonalBests {
   maxWeight: number;
   maxReps: number;
@@ -64,7 +69,7 @@ export function personalBests(sessions: WorkoutSession[], exerciseId: string, be
     if (beforeDate && session.date >= beforeDate) continue;
     const se = sessionExerciseFor(session, exerciseId);
     if (!se) continue;
-    for (const set of se.sets) {
+    for (const set of workingSets(se.sets)) {
       maxWeight = Math.max(maxWeight, set.weight);
       maxReps = Math.max(maxReps, set.reps);
       best1RM = Math.max(best1RM, estimated1RM(set.weight, set.reps));
@@ -92,7 +97,7 @@ export function detectPRs(
   let bestRepsSoFar = before.maxReps;
   let best1RMSoFar = before.best1RM;
 
-  for (const set of newSets) {
+  for (const set of workingSets(newSets)) {
     if (set.weight > 0 && set.weight > bestWeightSoFar) {
       hits.push({ type: "weight", value: set.weight, set });
       bestWeightSoFar = set.weight;
@@ -123,10 +128,11 @@ export function suggestNextWeight(
   const last = past[0];
   if (!last) return null;
   const se = sessionExerciseFor(last, exerciseId)!;
-  if (se.sets.length === 0) return null;
+  const sets = workingSets(se.sets);
+  if (sets.length === 0) return null;
 
-  const lastWeight = Math.max(...se.sets.map((s) => s.weight));
-  const allHitTarget = se.sets.every((s) => s.reps >= targetReps);
+  const lastWeight = Math.max(...sets.map((s) => s.weight));
+  const allHitTarget = sets.every((s) => s.reps >= targetReps);
   return allHitTarget ? lastWeight + progressionStep : lastWeight;
 }
 
@@ -141,9 +147,9 @@ export function exerciseProgress(sessions: WorkoutSession[], exerciseId: string)
   return sessions
     .filter((s) => sessionExerciseFor(s, exerciseId))
     .map((s) => {
-      const se = sessionExerciseFor(s, exerciseId)!;
-      const maxWeight = Math.max(...se.sets.map((set) => set.weight), 0);
-      const best1RM = Math.max(...se.sets.map((set) => estimated1RM(set.weight, set.reps)), 0);
+      const sets = workingSets(sessionExerciseFor(s, exerciseId)!.sets);
+      const maxWeight = Math.max(...sets.map((set) => set.weight), 0);
+      const best1RM = Math.max(...sets.map((set) => estimated1RM(set.weight, set.reps)), 0);
       return {
         date: s.date,
         label: new Date(s.date).toLocaleDateString("tr-TR", { day: "2-digit", month: "short" }),
@@ -152,6 +158,15 @@ export function exerciseProgress(sessions: WorkoutSession[], exerciseId: string)
       };
     })
     .sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/** The working sets logged the last time this exercise was done, for showing "geçen sefer" hints while logging. */
+export function lastLoggedSets(sessions: WorkoutSession[], exerciseId: string): SetEntry[] | null {
+  const past = sessions.filter((s) => sessionExerciseFor(s, exerciseId)).sort((a, b) => b.date.localeCompare(a.date));
+  const last = past[0];
+  if (!last) return null;
+  const sets = workingSets(sessionExerciseFor(last, exerciseId)!.sets);
+  return sets.length > 0 ? sets : null;
 }
 
 function startOfWeek(date: Date): Date {
@@ -192,7 +207,7 @@ export function weeklyVolumeByMuscleGroup(
       for (const se of session.exercises) {
         const ex = exerciseMap[se.exerciseId];
         if (!ex) continue;
-        const volume = se.sets.reduce((sum, s) => sum + s.weight * s.reps, 0);
+        const volume = workingSets(se.sets).reduce((sum, s) => sum + s.weight * s.reps, 0);
         row[ex.muscleGroup] = (row[ex.muscleGroup] as number) + volume;
         row.total += volume;
       }
@@ -287,9 +302,19 @@ export function monthLabel(year: number, month: number): string {
 }
 
 export function totalVolume(session: WorkoutSession): number {
-  return session.exercises.reduce((sum, se) => sum + se.sets.reduce((s, set) => s + set.weight * set.reps, 0), 0);
+  return session.exercises.reduce(
+    (sum, se) => sum + workingSets(se.sets).reduce((s, set) => s + set.weight * set.reps, 0),
+    0,
+  );
 }
 
 export function formatWeight(kg: number): string {
   return kg % 1 === 0 ? `${kg}` : kg.toFixed(1);
+}
+
+export function formatDuration(minutes: number): string {
+  if (minutes < 60) return `${minutes} dk`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m === 0 ? `${h} sa` : `${h} sa ${m} dk`;
 }
